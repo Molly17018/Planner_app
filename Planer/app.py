@@ -44,4 +44,4 @@ def index():
 
 if __name__ == '__main__':
     # WICHTIG: host='0.0.0.0' macht den Server außerhalb des Containers erreichbar
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=80) #80 statt 5000
