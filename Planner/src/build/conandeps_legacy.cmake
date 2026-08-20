@@ -2,5 +2,6 @@ message(STATUS "Conan: Using CMakeDeps conandeps_legacy.cmake aggregator via inc
 message(STATUS "Conan: It is recommended to use explicit find_package() per dependency instead")
 
 find_package(Crow)
+find_package(SQLite3)
 
-set(CONANDEPS_LEGACY  Crow::Crow )
+set(CONANDEPS_LEGACY  Crow::Crow  SQLite::SQLite3 )

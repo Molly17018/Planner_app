@@ -37,6 +37,8 @@ COPY --from=builder /app/build/webapp .
 
 # Kopiere den Templates-Ordner mit in den Container
 COPY templates ./templates
+COPY scripts ./scripts
+COPY style ./style
 
 EXPOSE 8080
 CMD ["./webapp"]
