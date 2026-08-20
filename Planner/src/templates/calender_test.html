@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Planner Kalender</title>
+    <!-- FullCalendar CSS & JS via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #calendar { max-width: 900px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+    <a href="/" class="btn">Dashboard</a>
+    
+    <div id="calendar"></div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        
+        if (!calendarEl) {
+          console.error("Element #calendar wurde im HTML nicht gefunden!");
+          return;
+        }
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          locale: 'de',
+          events: [
+            { title: 'Test-Event', start: new Date().toISOString().split('T')[0] }
+          ]
+        });
+
+        calendar.render();
+        console.log("Kalender wurde erfolgreich gerendert.");
+      });
+    </script>
+    
+</body>
+</html>

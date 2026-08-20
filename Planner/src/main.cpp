@@ -6,39 +6,39 @@
  */
 
 #include "crow.h"
+#include "DatabaseManager.h"
 #include <sqlite3.h>
 #include <iostream>
 
-void init_database() {
-    sqlite3* db;
-    // Erstellt planner.db, falls sie nicht existiert
-    if (sqlite3_open("planner.db", &db) == SQLITE_OK) {
-        const char* sql = "CREATE TABLE IF NOT EXISTS events ("
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                          "title TEXT NOT NULL, "
-                          "category TEXT NOT NULL, "
-                          "date TEXT NOT NULL);";
-
-        char* errMsg = nullptr;
-        if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-            std::cerr << "SQL-Fehler: " << errMsg << std::endl;
-            sqlite3_free(errMsg);
-        }
-        sqlite3_close(db);
-    }
-}
-
 int main() {
-	init_database();
-
 	crow::SimpleApp app;
+	DatabaseManager dbManager("planner.db");
+
+	crow::mustache::set_base("templates");
+
+	//All categories for the Calender
+	CROW_ROUTE(app, "/api/events")
+	    ([&dbManager](){
+	        return dbManager.getEvents();
+	    });
+
+	//Only filtered Calender
+	CROW_ROUTE(app, "/api/events/<string>")
+	    ([&dbManager](std::string category){
+	        return dbManager.getEvents(category);
+	    });
 
 	// Eine einfache Route für die Startseite ("/")
 	//define your endpoint at the root directory
-	crow::mustache::set_base("templates");
 	CROW_ROUTE(app, "/")([](){
-	    auto page = crow::mustache::load_text("page.html");
+	    auto page = crow::mustache::load_text("dashboard.html");
 	    return page;
+	});
+
+	CROW_ROUTE(app, "/calendar")
+	([](){
+	    crow::mustache::context ctx;
+	    return crow::mustache::load("calendar.html").render(ctx);
 	});
 
 	// API-Route für den Button-Klick

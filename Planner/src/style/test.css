@@ -20,3 +20,9 @@ body {
 .btn:hover {
     background-color: #2980b9;
 }
+
+#calendar {
+    max-width: 1000px;
+    margin: 20px auto;
+    min-height: 600px;
+}
