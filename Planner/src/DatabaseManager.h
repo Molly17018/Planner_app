@@ -59,7 +59,7 @@ class DatabaseManager {
     		                            "title TEXT NOT NULL, "
     		                            "date TEXT NOT NULL, "
     		                            "category TEXT"
-    		                            ");";
+    		                        ");";
 
     		const char* sqlTodos = "CREATE TABLE IF NOT EXISTS todos ("
     		                           "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -67,7 +67,13 @@ class DatabaseManager {
     		                           "category TEXT, "
     		                           "due_date TEXT, "
     		                           "done INTEGER DEFAULT 0"
-    		                           ");";
+    		                       ");";
+
+    		const char* sqlCategories = "CREATE TABLE IF NOT EXISTS categories ("
+    										"id INTEGER PRIMARY KEY AUTOINCREMENT, "
+    										"name TEXT UNIQUE NOT NULL, "
+    										"color TEXT NOT NULL"
+    									");";
 
     		sqlite3_exec(db, sqlEvents, nullptr, nullptr, nullptr);
     		sqlite3_exec(db, sqlTodos, nullptr, nullptr, nullptr);

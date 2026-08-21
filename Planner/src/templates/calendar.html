@@ -27,17 +27,20 @@
     <div class="todo-section">
         <h2>TODOs</h2>
                 
-        <!-- Eingabeformular -->
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" id="todo-input" placeholder="Neue Aufgabe..." />
-            <input type="date" id="todo-duedate" />
+        <!-- Hauptformular für To-Dos -->
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="todo-input" placeholder="Neue Aufgabe...">
+            <input type="date" id="todo-duedate">
             <input type="time" id="todo-duetime">
-            <select id="todo-category">
-                <option value="Uni">Uni</option>
-                <option value="Familie">Familie</option>
-                <option value="Freunde">Freunde</option>
-            </select>
+            <select id="todo-category" onchange="handleCategoryChange(this.value)"></select>
             <button onclick="addTodo()">Hinzufügen</button>
+        </div>
+
+        <!-- Erstellungsbereich für neue Kategorien (klappt darunter auf) -->
+        <div id="new-category-container" style="display: none; gap: 8px; margin-top: 8px; align-items: center;">
+            <input type="text" id="new-cat-name" placeholder="Kategoriename...">
+            <input type="color" id="new-cat-color" value="#3498db" style="width: 40px; height: 38px; border: none; cursor: pointer;">
+            <button type="button" onclick="addCategory()">Kategorie speichern</button>
         </div>
 
         <!-- Liste -->
