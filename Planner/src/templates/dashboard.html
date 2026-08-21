@@ -11,7 +11,26 @@
     <head>
     <body>
         <h1 class="title">Dashboard</h1>
-        <!-- Als Link im Button-Style -->
-        <a href="/calender" class="btn">Zum Kalender</a>
+        <!-- Link in Button style instead of actual button -->
+        <a href="/calendar" class="btn">Zum Kalender</a>
+        <!--ToDo task dislplay-->
+        <div class="todo-section">
+            <h2>Meine Aufgaben</h2>
+            
+            <!-- Eingabeformular -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="todo-input" placeholder="Neue Aufgabe..." />
+                <input type="date" id="todo-duedate" />
+                <select id="todo-category">
+                    <option value="Uni">Uni</option>
+                    <option value="Familie">Familie</option>
+                    <option value="Freunde">Freunde</option>
+                </select>
+                <button onclick="addTodo()">Hinzufügen</button>
+            </div>
+
+            <!-- Liste -->
+            <ul id="todo-list" style="list-style: none; padding: 0;"></ul>
+        </div>
     </body>
 </html>

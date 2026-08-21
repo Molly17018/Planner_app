@@ -32,6 +32,9 @@ FROM ubuntu:22.04
 
 WORKDIR /app
 
+# Creates the data dir to store the calendar data
+RUN mkdir -p /app/data
+
 # Wir kopieren nur das kompilierte Programm. Conan hat alle Abhängigkeiten statisch oder korrekt verknüpft!
 COPY --from=builder /app/build/webapp .
 

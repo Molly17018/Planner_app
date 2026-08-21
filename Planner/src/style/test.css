@@ -26,3 +26,11 @@ body {
     margin: 20px auto;
     min-height: 600px;
 }
+
+.cale_btn {
+    background-color: #3498db;
+    opacity: 0.5;
+    border: none;
+    padding: 55px 55px;
+    cursor: pointer;
+}
