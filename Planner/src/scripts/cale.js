@@ -15,6 +15,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 right: 'dayGridMonth,timeGridWeek'
             },
             selectable: true,
+            editable: true,
+            eventDrop: function(info) {
+                // Entfernt "todo-" aus der ID (z. B. "todo-1" -> "1")
+                const todoId = info.event.id.replace('todo-', '');
+                const newDueDate = info.event.startStr.split('T')[0];
+
+                fetch(`/api/todos/${todoId}`, {  // Ruft jetzt /api/todos/1 auf
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        dueDate: newDueDate
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Liste und Kalenderdaten synchronisieren
+                        renderCalendarAndTodos();
+                    } else {
+                        alert('Fehler beim Aktualisieren des Datums');
+                        info.revert();
+                    }
+                })
+                .catch(error => {
+                    console.error('Netzwerkfehler:', error);
+                    info.revert();
+                });
+            },
             
             // Klick auf ein Datum im Kalender -> Event erstellen
             dateClick: function(info) {

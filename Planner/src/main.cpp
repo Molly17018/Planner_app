@@ -14,18 +14,10 @@ int main() {
 	crow::SimpleApp app;
 	DatabaseManager dbManager("data/planner.db");
 
+	dbManager.initTables();
+
 	//define your endpoint at the root directory
 	crow::mustache::set_base("templates");
-
-	//All categories for the Calender
-	CROW_ROUTE(app, "/api/events")([&dbManager](){
-	    return dbManager.getEvents();
-	});
-
-	//Only filtered Calender
-	CROW_ROUTE(app, "/api/events/<string>")([&dbManager](std::string category){
-	    return dbManager.getEvents(category);
-	});
 
 	//Route to default page / dashboard
 	CROW_ROUTE(app, "/")([](){
@@ -38,6 +30,16 @@ int main() {
 	([](){
 	    crow::mustache::context ctx;
 	    return crow::mustache::load("calendar.html").render(ctx);
+	});
+
+	//All categories for the Calender
+	CROW_ROUTE(app, "/api/events")([&dbManager](){
+	    return dbManager.getEvents();
+	});
+
+	//Only filtered Calender
+	CROW_ROUTE(app, "/api/events/<string>")([&dbManager](std::string category){
+	    return dbManager.getEvents(category);
 	});
 
 	//Adds an event to the calender
@@ -86,6 +88,22 @@ int main() {
 	([&dbManager](int id){
 	    dbManager.deleteTodo(id);
 	    return crow::response(200, "Deleted");
+	});
+
+	CROW_ROUTE(app, "/api/todos/<int>").methods(crow::HTTPMethod::Put)
+	([&dbManager](const crow::request& req, int id){
+	    auto body = crow::json::load(req.body);
+	    if (!body || !body.has("dueDate")) {
+	        return crow::response(400, "Ungültiges JSON oder fehlendes 'dueDate'");
+	    }
+
+	    std::string dueDate = std::string(body["dueDate"].s());
+
+	    if (dbManager.updateTodoDueDate(id, dueDate)) {
+	        return crow::response(200, "Fälligkeitsdatum aktualisiert");
+	    } else {
+	        return crow::response(500, "Datenbankaktualisierung fehlgeschlagen");
+	    }
 	});
 
 	// API-Route für den Button-Klick in page.html

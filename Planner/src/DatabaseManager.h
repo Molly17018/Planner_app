@@ -65,7 +65,9 @@ class DatabaseManager {
     		                           "id INTEGER PRIMARY KEY AUTOINCREMENT, "
     		                           "title TEXT NOT NULL, "
     		                           "category TEXT, "
-    		                           "done INTEGER DEFAULT 0);";
+    		                           "due_date TEXT, "
+    		                           "done INTEGER DEFAULT 0"
+    		                           ");";
 
     		sqlite3_exec(db, sqlEvents, nullptr, nullptr, nullptr);
     		sqlite3_exec(db, sqlTodos, nullptr, nullptr, nullptr);
@@ -77,9 +79,9 @@ class DatabaseManager {
     			sqlite3_free(errMsg);
     		}
     		if (sqlite3_exec(db, sqlTodos, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-    		    			std::cerr << "SQL Fehler: " << errMsg << std::endl;
-    		    			sqlite3_free(errMsg);
-    		    		}
+    		    std::cerr << "SQL Fehler: " << errMsg << std::endl;
+    		    sqlite3_free(errMsg);
+    		}
     	}
 
     	// Termine abfragen: Entweder gefiltert nach Kategorie oder alle für die Gesamtübersicht
@@ -132,32 +134,51 @@ class DatabaseManager {
 
     	crow::json::wvalue getTodos() {
     	    std::vector<crow::json::wvalue> todoList;
-    	    const char* sql = "SELECT id, title, category, done FROM todos;";
+    	    const char* sql = "SELECT id, title, category, due_date, done FROM todos;";
     	    sqlite3_stmt* stmt;
 
     	    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
-    	    	while (sqlite3_step(stmt) == SQLITE_ROW) {
-    	    	    crow::json::wvalue item;
-    	    	    item["id"] = sqlite3_column_int(stmt, 0);
-    	    	    item["title"] = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-    	    	    item["category"] = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-    	    	    item["done"] = sqlite3_column_int(stmt, 3) == 1;
-    	    	    todoList.push_back(item);
+    	        while (sqlite3_step(stmt) == SQLITE_ROW) {
+    	            crow::json::wvalue item;
+    	            item["id"] = sqlite3_column_int(stmt, 0);
+
+    	            const char* title = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+    	            item["title"] = title ? title : "";
+
+    	            const char* category = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+    	            item["category"] = category ? category : "";
+
+    	            const char* dueDate = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+    	            item["due_date"] = dueDate ? dueDate : "";
+
+    	            item["done"] = (sqlite3_column_int(stmt, 4) == 1);
+
+    	            todoList.push_back(item);
     	        }
+    	        sqlite3_finalize(stmt);
     	    }
-    	    sqlite3_finalize(stmt);
     	    return crow::json::wvalue(todoList);
     	}
 
     	void addTodo(const std::string& title, const std::string& category, const std::string& dueDate = "") {
     	    const char* sql = "INSERT INTO todos (title, category, due_date, done) VALUES (?, ?, ?, 0);";
     	    sqlite3_stmt* stmt;
-    	    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
-    	            sqlite3_bind_text(stmt, 1, title.c_str(), -1, SQLITE_TRANSIENT);
-    	            sqlite3_bind_text(stmt, 2, category.c_str(), -1, SQLITE_TRANSIENT);
-    	            sqlite3_bind_text(stmt, 3, dueDate.c_str(), -1, SQLITE_TRANSIENT);
-    	            sqlite3_step(stmt);
+
+    	    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+    	        std::cout << "[DB ERROR] Prepare failed: " << sqlite3_errmsg(db) << std::endl;
+    	        return;
     	    }
+
+    	    sqlite3_bind_text(stmt, 1, title.c_str(), -1, SQLITE_TRANSIENT);
+    	    sqlite3_bind_text(stmt, 2, category.c_str(), -1, SQLITE_TRANSIENT);
+    	    sqlite3_bind_text(stmt, 3, dueDate.c_str(), -1, SQLITE_TRANSIENT);
+
+    	    if (sqlite3_step(stmt) != SQLITE_DONE) {
+    	        std::cout << "[DB ERROR] Step failed: " << sqlite3_errmsg(db) << std::endl;
+    	    } else {
+    	        std::cout << "[DB SUCCESS] Todo erfolgreich gespeichert: " << title << std::endl;
+    	    }
+
     	    sqlite3_finalize(stmt);
     	}
 
@@ -179,6 +200,27 @@ class DatabaseManager {
     	        sqlite3_step(stmt);
     	    }
     	    sqlite3_finalize(stmt);
+    	}
+
+    	bool updateTodoDueDate(int id, const std::string& dueDate) {
+    	    const char* sql = "UPDATE todos SET due_date = ? WHERE id = ?;";
+    	    sqlite3_stmt* stmt;
+
+    	    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+    	        std::cout << "[DB ERROR] Prepare failed: " << sqlite3_errmsg(db) << std::endl;
+    	        return false;
+    	    }
+
+    	    sqlite3_bind_text(stmt, 1, dueDate.c_str(), -1, SQLITE_TRANSIENT);
+    	    sqlite3_bind_int(stmt, 2, id);
+
+    	    bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+    	    if (!success) {
+    	        std::cout << "[DB ERROR] Update failed: " << sqlite3_errmsg(db) << std::endl;
+    	    }
+
+    	    sqlite3_finalize(stmt);
+    	    return success;
     	}
 
 };
