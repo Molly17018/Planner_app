@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'de',
+            firstDay: 1,
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -125,22 +126,44 @@ function renderCalendarAndTodos() {
 function renderTodoList(todos) {
     const list = document.getElementById('todo-list');
     if (!list) return;
+    
+    // Aktueller Zeitpunkt zum Vergleich
+    const now = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(now.getDate() - 7);
+    
+    const activeTodos = todos.filter(todo => {
+        if (todo.done && todo.due_date) {
+            const todoDate = new Date(todo.due_date);
+            // Ausblenden, wenn erledigt UND das Datum älter als vor einer Woche ist
+            if (todoDate < lastWeek) {
+                return false;
+            }
+        }
+        return true; // Alle anderen Aufgaben behalten
+    });
 
     list.innerHTML = '';
-    todos.forEach(todo => {
-        const li = document.createElement('li');
-        li.style.cssText = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: #f4f4f4; border-radius: 4px;";
+        activeTodos.forEach(todo => {
+            const li = document.createElement('li');
+            
+            const isOverdue = todo.due_date && !todo.done && new Date(todo.due_date) < now;
+            const dateStyle = isOverdue ? 'color: #d32f2f; font-weight: bold;' : 'color: #555;';
+            const warningTag = isOverdue ? ' ⚠️' : '';
+            
+            const dateText = todo.due_date 
+                ? ` <i style="${dateStyle}">(${formatDueDate(todo.due_date)}${warningTag})</i>` 
+                : '';
 
-        // Hier formatDueDate aufrufen:
-        const dateText = todo.due_date ? ` <i>(${formatDueDate(todo.due_date)})</i>` : '';
+            li.style.cssText = `display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: ${isOverdue ? '#ffebee' : '#f4f4f4'}; border-radius: 4px; border-left: ${isOverdue ? '4px solid #d32f2f' : 'none'};`;
 
-        li.innerHTML = `
-            <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}; cursor: pointer;" onclick="toggleTodo(${todo.id})">
-                <strong>[${todo.category}]</strong> ${todo.title}${dateText}
-            </span>
-            <button onclick="deleteTodo(${todo.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Löschen</button>
-        `;
-        list.appendChild(li);
+            li.innerHTML = `
+                <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}; cursor: pointer;" onclick="toggleTodo(${todo.id})">
+                    <strong>[${todo.category}]</strong> ${todo.title}${dateText}
+                </span>
+                <button onclick="deleteTodo(${todo.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Löschen</button>
+            `;
+            list.appendChild(li);
     });
 }
 

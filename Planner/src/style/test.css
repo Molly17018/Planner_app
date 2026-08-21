@@ -34,3 +34,15 @@ body {
     padding: 55px 55px;
     cursor: pointer;
 }
+
+/* css für kalender */
+/* Samstag und Sonntag farblich hinterlegen */
+.fc-day-sat, .fc-day-sun {
+    background-color: #f0f4f8 !important; /* Leichter Graublau-Ton */
+}
+
+/* Optional: Wochenend-Kopfzeilen (Sa/So) ebenfalls anpassen */
+.fc-col-header-cell.fc-day-sat, 
+.fc-col-header-cell.fc-day-sun {
+    background-color: #e2e8f0 !important;
+}
