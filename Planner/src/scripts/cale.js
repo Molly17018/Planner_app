@@ -104,7 +104,7 @@ function renderCalendarAndTodos() {
                     .filter(todo => todo.due_date && todo.due_date !== "")
                     .map(todo => ({
                         id: 'todo-' + todo.id,
-                        title: todo.done ? `☑ ${todo.title}` : `☐ ${todo.title}`,
+                        title: todo.done ? `☑ ${todo.title}` : `☐ [${getCategoryColor(category)}] ${todo.title}`,
                         start: todo.due_date,
                         display: 'list-item', //ToDo List appearence
                         backgroundColor: todo.done ? '#95a5a6' : '#e67e22',
@@ -145,26 +145,27 @@ function renderTodoList(todos) {
     });
 
     list.innerHTML = '';
-        activeTodos.forEach(todo => {
-            const li = document.createElement('li');
-            
-            const isOverdue = todo.due_date && !todo.done && new Date(todo.due_date) < now;
-            const dateStyle = isOverdue ? 'color: #d32f2f; font-weight: bold;' : 'color: #555;';
-            const warningTag = isOverdue ? ' ⚠️' : '';
-            
-            const dateText = todo.due_date 
-                ? ` <i style="${dateStyle}">(${formatDueDate(todo.due_date)}${warningTag})</i>` 
-                : '';
+    todos.forEach(todo => {
+        const li = document.createElement('li');
+        const catColor = todo.done ? '#bdc3c7' : getCategoryColor(todo.category);
+        
+        const isOverdue = todo.due_date && !todo.done && new Date(todo.due_date) < now;
+        const dateStyle = isOverdue ? 'color: #d32f2f; font-weight: bold;' : 'color: #555;';
+        const warningTag = isOverdue ? ' ⚠️' : '';
+        
+        const dateText = todo.due_date 
+            ? ` <i style="${dateStyle}">(${formatDueDate(todo.due_date)}${warningTag})</i>` 
+            : '';
 
-            li.style.cssText = `display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: ${isOverdue ? '#ffebee' : '#f4f4f4'}; border-radius: 4px; border-left: ${isOverdue ? '4px solid #d32f2f' : 'none'};`;
+        li.style.cssText = `display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: ${isOverdue ? '#ffebee' : '#f4f4f4'}; border-radius: 4px; border-left: 5px solid ${catColor};`;
 
-            li.innerHTML = `
-                <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}; cursor: pointer;" onclick="toggleTodo(${todo.id})">
-                    <strong>[${todo.category}]</strong> ${todo.title}${dateText}
-                </span>
-                <button onclick="deleteTodo(${todo.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Löschen</button>
-            `;
-            list.appendChild(li);
+        li.innerHTML = `
+            <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}; cursor: pointer;" onclick="toggleTodo(${todo.id})">
+                <strong style="color: ${catColor};">[${todo.category}]</strong> ${todo.title}${dateText}
+            </span>
+            <button onclick="deleteTodo(${todo.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Löschen</button>
+        `;
+        list.appendChild(li);
     });
 }
 
@@ -228,4 +229,19 @@ function formatDueDate(isoString) {
     }
 
     return `${day}.${month}.${year}`;
+}
+
+// Zuordnung von Kategorien zu Hex-Farbcodes
+const categoryColors = {
+    'Uni': '#3498db',       // Blau
+    'Arbeit': '#e74c3c',    // Rot
+    'Privat': '#2ecc71',    // Grün
+    'Freunde': '#9b59b6',   // Violett
+    'Familie': '#e67e22',   // Orange
+    'Allgemein': '#34495e'  // Dunkelgrau
+};
+
+// Hilfsfunktion: Gibt die passende Farbe oder einen Standardwert zurück
+function getCategoryColor(category) {
+    return categoryColors[category] || '#7f8c8d'; // Fallback: Grau
 }
