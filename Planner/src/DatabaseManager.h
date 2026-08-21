@@ -134,7 +134,9 @@ class DatabaseManager {
 
     	crow::json::wvalue getTodos() {
     	    std::vector<crow::json::wvalue> todoList;
-    	    const char* sql = "SELECT id, title, category, due_date, done FROM todos;";
+    	    // Sortiert valide Daten aufsteigend und schiebt leere Datumsfelder nach unten
+    	    const char* sql = "SELECT id, title, category, due_date, done FROM todos "
+    	                      "ORDER BY CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END, due_date ASC;";
     	    sqlite3_stmt* stmt;
 
     	    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {

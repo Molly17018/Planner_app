@@ -83,16 +83,31 @@ function loadTodos() {
 }
 
 function addTodo() {
-    const title = document.getElementById('todo-input').value;
-    const category = document.getElementById('todo-category').value;
-    const dueDate = document.getElementById('todo-duedate').value;
+    const titleEl = document.getElementById('todo-input');
+    const categoryEl = document.getElementById('todo-category');
+    const dueDateEl = document.getElementById('todo-duedate');
+    const dueTimeEl = document.getElementById('todo-duetime');
+
+    if (!titleEl) return;
+
+    const title = titleEl.value;
+    const category = categoryEl ? categoryEl.value : 'Allgemein';
+    const dueDate = dueDateEl ? dueDateEl.value : '';
+    const dueTime = dueTimeEl ? dueTimeEl.value : '';
+
+    // Falls Zeit angegeben ist, ISO-Format bauen (z.B. 2026-08-25T14:30:00)
+    let fullDueDate = dueDate;
+    if (dueDate && dueTime) {
+        fullDueDate = `${dueDate}T${dueTime}:00`;
+    }
 
     fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, category, dueDate })
+        body: JSON.stringify({ title, category, dueDate: fullDueDate })
     }).then(() => {
-        document.getElementById('todo-input').value = '';
+        titleEl.value = '';
+        if (dueTimeEl) dueTimeEl.value = '';
         renderCalendarAndTodos();
     });
 }

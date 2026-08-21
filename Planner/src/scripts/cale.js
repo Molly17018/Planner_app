@@ -17,25 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
             selectable: true,
             editable: true,
             eventDrop: function(info) {
-                // Entfernt "todo-" aus der ID (z. B. "todo-1" -> "1")
                 const todoId = info.event.id.replace('todo-', '');
-                const newDueDate = info.event.startStr.split('T')[0];
+                
+                // startStr enthält automatisch "YYYY-MM-DD" ODER "YYYY-MM-DDTHH:mm:ss"
+                const newDueDate = info.event.startStr;
 
-                fetch(`/api/todos/${todoId}`, {  // Ruft jetzt /api/todos/1 auf
+                fetch(`/api/todos/${todoId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        dueDate: newDueDate
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dueDate: newDueDate })
                 })
                 .then(response => {
                     if (response.ok) {
-                        // Liste und Kalenderdaten synchronisieren
                         renderCalendarAndTodos();
                     } else {
-                        alert('Fehler beim Aktualisieren des Datums');
+                        alert('Fehler beim Aktualisieren');
                         info.revert();
                     }
                 })
@@ -107,7 +103,7 @@ function renderCalendarAndTodos() {
                     .filter(todo => todo.due_date && todo.due_date !== "")
                     .map(todo => ({
                         id: 'todo-' + todo.id,
-                        title: `☑ ${todo.title}`,
+                        title: todo.done ? `☑ ${todo.title}` : `☐ ${todo.title}`,
                         start: todo.due_date,
                         backgroundColor: todo.done ? '#95a5a6' : '#e67e22',
                         borderColor: '#d35400'
@@ -135,7 +131,8 @@ function renderTodoList(todos) {
         const li = document.createElement('li');
         li.style.cssText = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: #f4f4f4; border-radius: 4px;";
 
-        const dateText = todo.due_date ? ` <i>(${todo.due_date})</i>` : '';
+        // Hier formatDueDate aufrufen:
+        const dateText = todo.due_date ? ` <i>(${formatDueDate(todo.due_date)})</i>` : '';
 
         li.innerHTML = `
             <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}; cursor: pointer;" onclick="toggleTodo(${todo.id})">
@@ -152,19 +149,28 @@ function addTodo() {
     const titleEl = document.getElementById('todo-input');
     const categoryEl = document.getElementById('todo-category');
     const dueDateEl = document.getElementById('todo-duedate');
+    const dueTimeEl = document.getElementById('todo-duetime');
 
     if (!titleEl) return;
 
     const title = titleEl.value;
     const category = categoryEl ? categoryEl.value : 'Allgemein';
     const dueDate = dueDateEl ? dueDateEl.value : '';
+    const dueTime = dueTimeEl ? dueTimeEl.value : '';
+
+    // Falls Zeit angegeben ist, ISO-Format bauen (z.B. 2026-08-25T14:30:00)
+    let fullDueDate = dueDate;
+    if (dueDate && dueTime) {
+        fullDueDate = `${dueDate}T${dueTime}:00`;
+    }
 
     fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, category, dueDate })
+        body: JSON.stringify({ title, category, dueDate: fullDueDate })
     }).then(() => {
         titleEl.value = '';
+        if (dueTimeEl) dueTimeEl.value = '';
         renderCalendarAndTodos();
     });
 }
@@ -177,4 +183,25 @@ function toggleTodo(id) {
 function deleteTodo(id) {
     fetch(`/api/todos/${id}`, { method: 'DELETE' })
         .then(() => renderCalendarAndTodos());
+}
+
+//Formats the date to an european styl readable string
+function formatDueDate(isoString) {
+    if (!isoString) return '';
+    
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return isoString; // Fallback bei ungültigem String
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    // Falls eine Uhrzeit enthalten ist (enthält "T"), Zeit im Format HH:MM anfügen
+    if (isoString.includes('T')) {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
+
+    return `${day}.${month}.${year}`;
 }
