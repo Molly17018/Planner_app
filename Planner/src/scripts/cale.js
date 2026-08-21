@@ -106,6 +106,7 @@ function renderCalendarAndTodos() {
                         id: 'todo-' + todo.id,
                         title: todo.done ? `☑ ${todo.title}` : `☐ ${todo.title}`,
                         start: todo.due_date,
+                        display: 'list-item', //ToDo List appearence
                         backgroundColor: todo.done ? '#95a5a6' : '#e67e22',
                         borderColor: '#d35400'
                     }));
